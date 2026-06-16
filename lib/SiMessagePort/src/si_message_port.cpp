@@ -1,7 +1,7 @@
 #include "si_message_port.hpp"
 
-SiMessagePort::SiMessagePort(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload)) {
-	si_message_port_init(device, channel, message_callback);
+SiMessagePort::SiMessagePort(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload), HardwareSerial* serial_port) {
+	si_message_port_init(device, channel, message_callback, serial_port);
 }
 
 enum SiMessagePortResult SiMessagePort::SendMessage(uint16_t message_id) {

@@ -86,8 +86,8 @@ enum SiMessagePortLogLevel {
 	SI_MESSAGE_PORT_LOG_LEVEL_ERROR
 };
 
-// Call once on boot
-enum SiMessagePortResult si_message_port_init(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload));
+// Call once on boot. serial_port must point to the HardwareSerial instance to use.
+enum SiMessagePortResult si_message_port_init(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload), void* serial_port);
 
 // Call on every tick
 void si_message_port_tick();

@@ -8,7 +8,9 @@
 extern "C" {
 #endif
 
-void si_message_port_driver_init();
+// serial_port: pointer to the HardwareSerial instance to use (e.g. &Serial2).
+// The caller must call serial_port->begin() before constructing SiMessagePort.
+void si_message_port_driver_init(void* serial_port);
 
 void si_message_port_driver_sync(struct SiCircularData* input_buffer, struct SiCircularData* output_buffer);
 

@@ -58,7 +58,10 @@
 class SiMessagePort
 {
 public:
-	SiMessagePort(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload));
+	// serial_port: the HardwareSerial instance for Air Manager communication.
+	// Call serial_port.begin(baud) before constructing this object.
+	// Example: Serial2.begin(115200); messagePort = new SiMessagePort(SI_MESSAGE_PORT_DEVICE_ESP32, SI_MESSAGE_PORT_CHANNEL_A, callback, &Serial2);
+	SiMessagePort(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload), HardwareSerial* serial_port);
 
 	enum SiMessagePortResult SendMessage(uint16_t message_id);
 	enum SiMessagePortResult SendMessage(uint16_t message_id, String string);

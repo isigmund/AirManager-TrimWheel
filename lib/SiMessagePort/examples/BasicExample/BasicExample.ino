@@ -1,18 +1,18 @@
 /*
-	Sim Innovations Message Port example:
-	
-	In this example we can communicate with Air Manager or Air Player over a standard USB cable.
-	This is done using the Message Port library.
-	
+	Sim Innovations Message Port example (modified for configurable serial port):
+
+	In this example we communicate with Air Manager or Air Player over a hardware
+	serial port of your choice. On ESP32 this is typically Serial2 (pins 16/17),
+	which keeps Serial (USB) free for debug output.
+
 	See the code below on how to implement this library.
-	
+
 	More information on how to implement the Air Manager or Air Player side can be found here:
 	https://siminnovations.com/wiki/index.php?title=Hw_message_port_add
-	
-	
-	NOTE: 
-	The Message Port library communicates with the PC using Serial Port 0 of the Arduino.
-	Do not use Serial port 0 yourself!
+
+	NOTE:
+	Call serial_port.begin() BEFORE constructing SiMessagePort.
+	The library no longer calls Serial.begin() internally.
 */
 
 #include <si_message_port.hpp>
@@ -47,8 +47,15 @@ static void new_message_callback(uint16_t message_id, struct SiMessagePortPayloa
 }
 
 void setup() {
-	// Init library on channel A and Arduino type MEGA 2560
-	messagePort = new SiMessagePort(SI_MESSAGE_PORT_DEVICE_ARDUINO_MEGA_2560, SI_MESSAGE_PORT_CHANNEL_A, new_message_callback);
+	// Optional: keep Serial free for debug output
+	Serial.begin(115200);
+
+	// Start the serial port used for Air Manager communication
+	// ESP32 Serial2 defaults to RX=16, TX=17
+	Serial2.begin(115200);
+
+	// Pass the serial port instance to the library
+	messagePort = new SiMessagePort(SI_MESSAGE_PORT_DEVICE_ESP32, SI_MESSAGE_PORT_CHANNEL_A, new_message_callback, &Serial2);
 }
 
 void loop() {

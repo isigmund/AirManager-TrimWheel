@@ -119,7 +119,7 @@ static void sim_extern_client_callback(const struct SimExternMessageBase* messag
 }
 
 // Call once on boot
-enum SiMessagePortResult si_message_port_init(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload)) {
+enum SiMessagePortResult si_message_port_init(enum SiMessagePortDevice device, enum SiMessagePortChannel channel, void (*message_callback)(uint16_t message_id, struct SiMessagePortPayload* payload), void* serial_port) {
 	lib.channel = channel;
 	lib.message_callback = message_callback;
 
@@ -131,7 +131,7 @@ enum SiMessagePortResult si_message_port_init(enum SiMessagePortDevice device, e
 
 	sim_extern_client_init(&lib.sim_extern_client, &lib.input_buffer, &lib.output_buffer, sim_extern_client_callback, NULL);
 
-	si_message_port_driver_init();
+	si_message_port_driver_init(serial_port);
 
 	switch(device) {
 	case SI_MESSAGE_PORT_DEVICE_ARDUINO_MEGA_2560:
