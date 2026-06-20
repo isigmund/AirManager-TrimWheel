@@ -1,12 +1,18 @@
 # Project: [Device Name] ESP32 Firmware
 
 ## Overview
-Firmware for a single ESP32 board running [brief purpose — e.g. "a capacitive-touch night light controller"].
-Built with PlatformIO using the Arduino framework.
+Firmware for a single ESP32 board running the required logic for a flight simulator trim wheel wich is communicatin with Air Manager from SimInnovations. Built with PlatformIO using the Arduino framework.
+
+
 
 ## Hardware
-- Board: [e.g. ESP32-C6-DevKitC-1 / generic ESP32-WROOM-32]
-- Key peripherals: [e.g. CAP1188 touch controller via I2C, WS2812 LED strip, OLED display]
+- Board:ESP32-S3 base PD-Stepper board (see https://github.com/joshr120/PD-Stepper)
+- Key peripherals:
+  - Endstop S1 connected to gpio35
+  - Endstop S2 connected to gpio36
+  - Rotary HallSensor AS5600 conneced via i2c
+  - TMC2209 Stepper driver connected to gpio5 for STEP, gpio6 for DIR and gpio2q for TMC_EN
+  - Second Serial port connected to gpio13 for TX and gpio14 for RX. This port is to be used to communicate via the simessageport library with AirManager
 - Pinout: see `docs/pinout.md` (create if it doesn't exist yet)
 
 ## Build / Flash / Monitor
