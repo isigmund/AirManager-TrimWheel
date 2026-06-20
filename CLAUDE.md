@@ -3,6 +3,9 @@
 ## Overview
 Firmware for a single ESP32 board running the required logic for a flight simulator trim wheel wich is communicatin with Air Manager from SimInnovations. Built with PlatformIO using the Arduino framework.
 
+To calibrate the trimwhell suring setup:
+Run the motor cw until endstop s1 is triggered, the run it ccw until endstop s2 ist triggered. during this second phase use the rotary hall sensor to record the rotation needed between the 2 endstops. ina third phase turn the motor cw again until the half of the rotation angel to position the trimwheel in the center as a starting point.
+
 
 
 ## Hardware
