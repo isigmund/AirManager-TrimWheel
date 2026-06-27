@@ -3,8 +3,18 @@
 ## Overview
 Firmware for a single ESP32 board running the required logic for a flight simulator trim wheel wich is communicatin with Air Manager from SimInnovations. Built with PlatformIO using the Arduino framework.
 
-To calibrate the trimwhell suring setup:
-Run the motor cw until endstop s1 is triggered, the run it ccw until endstop s2 ist triggered. during this second phase use the rotary hall sensor to record the rotation needed between the 2 endstops. ina third phase turn the motor cw again until the half of the rotation angel to position the trimwheel in the center as a starting point.
+To calibrate the trimwheel during setup:
+Run the motor cw until endstop s1 is triggered, the run it ccw until endstop s2 ist triggered. During this second ccw phase use the rotary hall sensor to record the rotation needed between the 2 endstops. The motor axis will has sevaral full turn rotations top sweep the whole range, so the values stored for the rotation needs to account for that. In a third phase turn the motor cw again until the half of the previously measured rotation value in order to position the trimwheel in the center as a starting point.
+
+A CW turn from the motor (as viewed when looking onto the axis) represents the "Nose Down" trim direction, consequently a CCW turn of the motor represents the "Node Up" trim.
+
+The values from the Simulator range from 1 representing the full "Nose Up" position -0.86363636363636 representing the maximum "Nose Down" position, these values are specific for a Cessna 172. The sim value at middle postion of the trim wheel is 0.13636363636364
+
+After the calibration is done, the firmware shall contnously monitor the values from the sim, then transpose that into the motor rotation values by using the min and max rotation values determined during calibration. That way the trim wheel follows the values from the simulator. After the trimwheel has reached the position as decribed above the motor shall be in freewheel mode allowing manual turning of the wheel.
+
+The trim wheel can also be turned manually, if that happens the rotation value measured by the rotary hall sensor shall be transposed into the corresponding position value understood by the sim and send to the sim via the corresponding msfs event.
+
+As an additional function the switch S3 is used to center the trim wheel. If presed the wheel returns to the center position ad like with a manual turn of the trim wheel this is relayed to the sim via the event.
 
 
 
@@ -13,10 +23,17 @@ Run the motor cw until endstop s1 is triggered, the run it ccw until endstop s2 
 - Key peripherals:
   - Endstop S1 connected to gpio35
   - Endstop S2 connected to gpio36
-  - Rotary HallSensor AS5600 conneced via i2c
-  - TMC2209 Stepper driver connected to gpio5 for STEP, gpio6 for DIR and gpio2q for TMC_EN
+  - Center Switch S3 connected to gpio37
+  - Rotary HallSensor AS5600 conneced via i2c with the following pins:
+    - SDA: gpio
+    - SCL: gpio
+  - TMC2209 Stepper driver connected to the following pins:
+    - STEP: gpio5
+    - DIR: gpio6
+    - TMC_EN: gpio2
   - Second Serial port connected to gpio13 for TX and gpio14 for RX. This port is to be used to communicate via the simessageport library with AirManager
-- Pinout: see `docs/pinout.md` (create if it doesn't exist yet)
+
+
 
 ## Build / Flash / Monitor
 ```bash
@@ -47,8 +64,8 @@ pio test                    # run unit tests (if present)
 
 ## Do Not
 - Commit `include/secrets.h` or any credentials
-- [Anything else off-limits — e.g. "don't change the partition table without checking OTA impact"]
 
 ## Useful Context
-- [Links to datasheets, related repos, or prior design notes]
-- [Known quirks/bugs to watch for]
+- PD Stepper repo[Links to datasheets, related repos, or prior design notes]
+- Sim Innovationm wiki page [Known quirks/bugs to watch for]
+
