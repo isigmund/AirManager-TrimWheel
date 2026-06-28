@@ -73,6 +73,7 @@ private:
     // FollowSim bookkeeping.
     bool    _driving = false;        // actively closing on a target
     bool    _centering = false;      // current drive is an S3 centre request
+    bool    _braking = false;        // holding brake while sat on an endstop
     float   _referenceSim = SIM_CENTER;  // sim value the wheel currently reflects
     int32_t _freewheelBaseline = 0;  // position when freewheel began
 };

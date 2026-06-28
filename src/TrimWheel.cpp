@@ -209,6 +209,20 @@ void TrimWheel::runFollowSim() {
     }
 
     // 3) Idle / freewheeling: watch for a deliberate manual turn and relay it.
+    // A manual turn can run the wheel onto an endstop. When that happens,
+    // switch the motor to a holding brake so the user feels the limit instead
+    // of turning freely past it; release back to freewheel once they come off.
+    const bool atLimit = _inputs.s1Triggered() || _inputs.s2Triggered();
+    if (atLimit && !_braking) {
+        Serial.printf("[TrimWheel] manual turn hit %s -> brake\n",
+                      _inputs.s1Triggered() ? "S1" : "S2");
+        _stepper.brake();
+        _braking = true;
+    } else if (!atLimit && _braking) {
+        Serial.println("[TrimWheel] off endstop -> freewheel");
+        enterFreewheel();
+    }
+
     const int32_t pos = _sensor.position();
     if (labs(pos - _freewheelBaseline) > MANUAL_MOVE_COUNTS) {
         const float s = posToSim(pos);
@@ -220,6 +234,7 @@ void TrimWheel::runFollowSim() {
 
 void TrimWheel::enterFreewheel() {
     _stepper.disable();  // release coils so the wheel turns by hand
+    _braking = false;
     _freewheelBaseline = _sensor.position();
 }
 

@@ -20,6 +20,7 @@ public:
 
     void enable();    // energise coils (EN low)
     void disable();   // release coils -> freewheel (EN high)
+    void brake();     // energise coils but stop stepping -> holding brake
     bool isEnabled() const { return _enabled; }
 
     void runCW(float stepsPerSec);
