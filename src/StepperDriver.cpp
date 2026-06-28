@@ -59,12 +59,6 @@ void StepperDriver::disable() {
     _enabled = false;
 }
 
-void StepperDriver::brake() {
-    stop();                          // no step pulses; just hold position
-    digitalWrite(PIN_TMC_EN, LOW);   // coils energised -> holding torque
-    _enabled = true;
-}
-
 void StepperDriver::setSpeed(bool cw, float stepsPerSec) {
     digitalWrite(PIN_TMC_DIR, cw ? TMC_DIR_CW_LEVEL : !TMC_DIR_CW_LEVEL);
 

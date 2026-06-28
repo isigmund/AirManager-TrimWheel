@@ -141,9 +141,10 @@ void TrimWheel::heartbeat() {
     if ((now - _lastHeartbeatMs) < 1000) return;
     _lastHeartbeatMs = now;
 
-    Serial.printf("[hb] state=%-15s pg=%d pos=%ld refSim=%.4f drv=%d\n",
+    Serial.printf("[hb] state=%-15s pg=%d pos=%ld refSim=%.4f drv=%d bko=%d\n",
                   stateName(), _pd.isPowerGood() ? 1 : 0,
-                  (long)_sensor.position(), _referenceSim, _driving ? 1 : 0);
+                  (long)_sensor.position(), _referenceSim, _driving ? 1 : 0,
+                  _backingOff ? 1 : 0);
 }
 
 void TrimWheel::updateLeds() {
@@ -208,22 +209,40 @@ void TrimWheel::runFollowSim() {
         return;
     }
 
-    // 3) Idle / freewheeling: watch for a deliberate manual turn and relay it.
-    // A manual turn can run the wheel onto an endstop. When that happens,
-    // switch the motor to a holding brake so the user feels the limit instead
-    // of turning freely past it; release back to freewheel once they come off.
-    const bool atLimit = _inputs.s1Triggered() || _inputs.s2Triggered();
-    if (atLimit && !_braking) {
-        Serial.printf("[TrimWheel] manual turn hit %s -> brake\n",
-                      _inputs.s1Triggered() ? "S1" : "S2");
-        _stepper.brake();
-        _braking = true;
-    } else if (!atLimit && _braking) {
-        Serial.println("[TrimWheel] off endstop -> freewheel");
-        enterFreewheel();
+    // 3) Manual / idle handling.
+    const int32_t pos = _sensor.position();
+
+    // 3a) Finish an in-progress back-off from an endstop, then freewheel so the
+    //     wheel is clear of the switch and free to turn back by hand.
+    if (_backingOff) {
+        if (driveTo(_backoffTarget)) {
+            _backingOff = false;
+            enterFreewheel();
+            Serial.println("[TrimWheel] backed off endstop -> freewheel");
+        }
+        return;
     }
 
-    const int32_t pos = _sensor.position();
+    // 3b) A manual turn has run the wheel onto a limit switch. Pinning the wheel
+    //     on the switch and freeing it by hand needs a hard shove that mis-wraps
+    //     the multi-turn count, so instead actively drive it ENDSTOP_BACKOFF_COUNTS
+    //     back toward centre (3a) — a clear "you hit the limit" push that leaves
+    //     the wheel free to turn back. If the back-off doesn't release the switch
+    //     the next loop simply steps off again.
+    if (_inputs.s1Triggered() || _inputs.s2Triggered()) {
+        const bool s1 = _inputs.s1Triggered();
+        // S1 is the CW/Nose-Down limit -> centre lies toward S2, and vice versa.
+        const int32_t toCentre =
+            ((_posS2 >= _posS1) ? 1 : -1) * (s1 ? 1 : -1) * ENDSTOP_BACKOFF_COUNTS;
+        _backoffTarget = pos + toCentre;
+        Serial.printf("[TrimWheel] manual over-travel onto %s -> back off %ld\n",
+                      s1 ? "S1" : "S2", (long)ENDSTOP_BACKOFF_COUNTS);
+        _stepper.enable();
+        _backingOff = true;
+        return;
+    }
+
+    // 3c) Normal freewheel: relay a deliberate manual turn to the sim.
     if (labs(pos - _freewheelBaseline) > MANUAL_MOVE_COUNTS) {
         const float s = posToSim(pos);
         _sim.sendTrim(s);
@@ -234,7 +253,7 @@ void TrimWheel::runFollowSim() {
 
 void TrimWheel::enterFreewheel() {
     _stepper.disable();  // release coils so the wheel turns by hand
-    _braking = false;
+    _backingOff = false;
     _freewheelBaseline = _sensor.position();
 }
 

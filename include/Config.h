@@ -128,6 +128,15 @@ constexpr float DRIVE_KP_SPS      = 12.0f;    // steps/s per sensor count of err
 constexpr int32_t POS_DEADBAND_COUNTS    = 12;  // "on target" window
 constexpr int32_t MANUAL_MOVE_COUNTS     = 40;  // freewheel move that counts as
                                                 // a deliberate manual turn
+
+// Manual over-travel handling: when a hand-turn runs the wheel onto a limit
+// switch, drive it this far back toward centre before holding it with a brake,
+// so the wheel is never pinned on the switch (freeing it from there needs a
+// hard shove that mis-wraps the multi-turn count). Tunable; start small. If the
+// back-off doesn't release the switch the limit handler simply steps off again.
+constexpr float   ENDSTOP_BACKOFF_DEG    = 2.0f;
+constexpr int32_t ENDSTOP_BACKOFF_COUNTS =
+    (int32_t)(ENDSTOP_BACKOFF_DEG * AS5600_COUNTS_PER_REV / 360.0f + 0.5f);
 // Sim-value change (absolute) large enough to command a follow move.
 constexpr float SIM_FOLLOW_DEADBAND = 0.01f;
 
