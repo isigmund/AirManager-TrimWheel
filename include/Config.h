@@ -120,7 +120,7 @@ constexpr float SIM_NOSE_UP   =  1.00000000f;  // S2 / CCW extreme
 // Speeds are in steps/s and scaled for 32 microsteps (2x the 16-microstep base)
 // so physical RPM matches the original tuning.
 constexpr float CALIB_SPEED_SPS   = 1200.0f;  // steps/s while seeking endstops
-constexpr float DRIVE_MAX_SPS     = 4800.0f;  // steps/s cap while following sim
+constexpr float DRIVE_MAX_SPS     = 3600.0f;  // steps/s cap while following sim
 constexpr float DRIVE_MIN_SPS     = 300.0f;   // steps/s floor near the target
 constexpr float DRIVE_KP_SPS      = 12.0f;    // steps/s per sensor count of error
 
