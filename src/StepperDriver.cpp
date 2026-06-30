@@ -1,6 +1,7 @@
 #include "StepperDriver.h"
 
 #include "Config.h"
+#include "DebugLog.h"
 
 // The TMC2209 talks UART on Serial1; the port is opened in begin().
 StepperDriver::StepperDriver()
@@ -39,7 +40,7 @@ bool StepperDriver::begin() {
     _driver.blank_time(24);
 
     const bool ok = driverOk();
-    Serial.printf("[TMC2209] begin, UART %s\n", ok ? "OK" : "FAILED");
+    LOGF("[TMC2209] begin, UART %s\n", ok ? "OK" : "FAILED");
     return ok;
 }
 

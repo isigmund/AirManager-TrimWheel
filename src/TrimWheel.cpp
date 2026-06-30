@@ -1,6 +1,7 @@
 #include "TrimWheel.h"
 
 #include "Config.h"
+#include "DebugLog.h"
 
 namespace {
 // Linear interpolation that also extrapolates; callers clamp the inputs.
@@ -11,7 +12,7 @@ float linMap(float x, float x0, float x1, float y0, float y1) {
 }  // namespace
 
 void TrimWheel::begin() {
-    Serial.println("[TrimWheel] init");
+    LOGLN("[TrimWheel] init");
 
     _sim.begin();          // bring the Air Manager link up early for logging
     _pd.begin();           // request 5V; driver stays disabled
@@ -47,12 +48,12 @@ void TrimWheel::update() {
     switch (_state) {
         case State::WaitPower:
             if (_pd.isPowerGood()) {
-                Serial.println("[TrimWheel] power good -> calibrating");
+                LOGLN("[TrimWheel] power good -> calibrating");
                 _sim.debug("TrimWheel: power good, calibrating");
                 startCalibration();
             } else if (PD_POWER_GOOD_TIMEOUT_MS &&
                        (millis() - _phaseStartMs) > PD_POWER_GOOD_TIMEOUT_MS) {
-                Serial.println("[TrimWheel] FAULT: power good timeout");
+                LOGLN("[TrimWheel] FAULT: power good timeout");
                 setState(State::Fault);
             }
             break;
@@ -62,10 +63,10 @@ void TrimWheel::update() {
             if (_inputs.s1Triggered()) {
                 _stepper.stop();
                 _posS1 = _sensor.position();
-                Serial.printf("[TrimWheel] S1 hit at %ld\n", (long)_posS1);
+                LOGF("[TrimWheel] S1 hit at %ld\n", (long)_posS1);
                 setState(State::CalibrateS2);
             } else if ((millis() - _phaseStartMs) > CALIB_PHASE_TIMEOUT_MS) {
-                Serial.println("[TrimWheel] FAULT: S1 not found");
+                LOGLN("[TrimWheel] FAULT: S1 not found");
                 setState(State::Fault);
             } else {
                 _stepper.runCW(CALIB_SPEED_SPS);
@@ -78,12 +79,12 @@ void TrimWheel::update() {
                 _stepper.stop();
                 _posS2 = _sensor.position();
                 _posCenter = _posS1 + (_posS2 - _posS1) / 2;
-                Serial.printf("[TrimWheel] S2 hit at %ld, centre %ld (travel %ld)\n",
+                LOGF("[TrimWheel] S2 hit at %ld, centre %ld (travel %ld)\n",
                               (long)_posS2, (long)_posCenter,
                               (long)(_posS2 - _posS1));
                 setState(State::CalibrateCenter);
             } else if ((millis() - _phaseStartMs) > CALIB_PHASE_TIMEOUT_MS) {
-                Serial.println("[TrimWheel] FAULT: S2 not found");
+                LOGLN("[TrimWheel] FAULT: S2 not found");
                 setState(State::Fault);
             } else {
                 _stepper.runCCW(CALIB_SPEED_SPS);
@@ -93,13 +94,13 @@ void TrimWheel::update() {
         case State::CalibrateCenter:
             // Drive back to half travel (CW from the S2 end) to centre the wheel.
             if (driveTo(_posCenter)) {
-                Serial.println("[TrimWheel] centred -> following sim");
+                LOGLN("[TrimWheel] centred -> following sim");
                 _sim.debug("TrimWheel: calibrated, following sim");
                 _referenceSim = SIM_CENTER;
                 enterFreewheel();
                 setState(State::FollowSim);
             } else if ((millis() - _phaseStartMs) > CALIB_PHASE_TIMEOUT_MS) {
-                Serial.println("[TrimWheel] FAULT: centring timeout");
+                LOGLN("[TrimWheel] FAULT: centring timeout");
                 setState(State::Fault);
             }
             break;
@@ -141,7 +142,7 @@ void TrimWheel::heartbeat() {
     if ((now - _lastHeartbeatMs) < 1000) return;
     _lastHeartbeatMs = now;
 
-    Serial.printf("[hb] state=%-15s pg=%d pos=%ld refSim=%.4f drv=%d bko=%d\n",
+    LOGF("[hb] state=%-15s pg=%d pos=%ld refSim=%.4f drv=%d bko=%d\n",
                   stateName(), _pd.isPowerGood() ? 1 : 0,
                   (long)_sensor.position(), _referenceSim, _driving ? 1 : 0,
                   _backingOff ? 1 : 0);
@@ -165,7 +166,7 @@ void TrimWheel::updateLeds() {
 void TrimWheel::runFollowSim() {
     // 0) Long press of S3 re-runs the full calibration sequence.
     if (_inputs.recalibrateRequested()) {
-        Serial.println("[TrimWheel] S3 long press -> recalibrating");
+        LOGLN("[TrimWheel] S3 long press -> recalibrating");
         _sim.debug("TrimWheel: recalibrating");
         startCalibration();
         return;
@@ -173,7 +174,7 @@ void TrimWheel::runFollowSim() {
 
     // 1) S3 short press centres the wheel and behaves like a commanded move.
     if (_inputs.centerPressed()) {
-        Serial.println("[TrimWheel] centre button");
+        LOGLN("[TrimWheel] centre button");
         _stepper.enable();
         _driving = true;
         _centering = true;
@@ -218,7 +219,7 @@ void TrimWheel::runFollowSim() {
         if (driveTo(_backoffTarget)) {
             _backingOff = false;
             enterFreewheel();
-            Serial.println("[TrimWheel] backed off endstop -> freewheel");
+            LOGLN("[TrimWheel] backed off endstop -> freewheel");
         }
         return;
     }
@@ -235,7 +236,7 @@ void TrimWheel::runFollowSim() {
         const int32_t toCentre =
             ((_posS2 >= _posS1) ? 1 : -1) * (s1 ? 1 : -1) * ENDSTOP_BACKOFF_COUNTS;
         _backoffTarget = pos + toCentre;
-        Serial.printf("[TrimWheel] manual over-travel onto %s -> back off %ld\n",
+        LOGF("[TrimWheel] manual over-travel onto %s -> back off %ld\n",
                       s1 ? "S1" : "S2", (long)ENDSTOP_BACKOFF_COUNTS);
         _stepper.enable();
         _backingOff = true;

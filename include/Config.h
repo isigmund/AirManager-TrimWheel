@@ -12,6 +12,24 @@
 #include <Arduino.h>
 
 // -----------------------------------------------------------------------------
+//  Debug console (WiFi SoftAP + telnet TCP server)
+// -----------------------------------------------------------------------------
+// Master switch for the whole debug mechanism. With DEBUG_MODE == 0 this is a
+// production build: no WiFi access point, no TCP server, and every LOG* call
+// compiles away to nothing (no WiFi code is linked in). With DEBUG_MODE == 1
+// the board brings up a SoftAP and a telnet server so the log can be watched
+// over WiFi — useful when USB power and a serial cable can't be used at once.
+// See DebugLog.{h,cpp}.
+#define DEBUG_MODE 1
+
+#if DEBUG_MODE
+constexpr char     DEBUG_AP_SSID[]  = "TrimWheel-Debug";
+constexpr char     DEBUG_AP_PASS[]  = "trimwheel";  // >= 8 chars for WPA2
+constexpr uint8_t  DEBUG_AP_CHANNEL = 1;
+constexpr uint16_t DEBUG_TCP_PORT   = 23;           // telnet
+#endif
+
+// -----------------------------------------------------------------------------
 //  Power Delivery (CH224K USB-PD sink controller)
 // -----------------------------------------------------------------------------
 constexpr uint8_t PIN_PD_PG   = 15;  // Power Good (open-drain, active low)

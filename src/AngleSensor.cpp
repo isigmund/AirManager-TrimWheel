@@ -3,6 +3,7 @@
 #include <Wire.h>
 
 #include "Config.h"
+#include "DebugLog.h"
 
 bool AngleSensor::begin() {
     Wire.begin(PIN_AS5600_SDA, PIN_AS5600_SCL, AS5600_I2C_HZ);
@@ -11,13 +12,13 @@ bool AngleSensor::begin() {
     _as5600.setDirection(AS5600_CLOCK_WISE);
     _connected = _as5600.isConnected();
     if (!_connected) {
-        Serial.println("[AS5600] sensor not detected on I2C bus!");
+        LOGLN("[AS5600] sensor not detected on I2C bus!");
         return false;
     }
 
     _as5600.resetCumulativePosition(0);
     _position = 0;
-    Serial.println("[AS5600] ready");
+    LOGLN("[AS5600] ready");
     return true;
 }
 

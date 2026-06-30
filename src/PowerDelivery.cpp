@@ -1,6 +1,7 @@
 #include "PowerDelivery.h"
 
 #include "Config.h"
+#include "DebugLog.h"
 
 void PowerDelivery::begin() {
     // Select 5V on the CH224K before anything downstream draws current.
@@ -15,7 +16,7 @@ void PowerDelivery::begin() {
     // until the controller pulls it low to signal "power good".
     pinMode(PIN_PD_PG, INPUT_PULLUP);
 
-    Serial.println("[PD] Requested 5V, waiting for power good...");
+    LOGLN("[PD] Requested 5V, waiting for power good...");
 }
 
 bool PowerDelivery::isPowerGood() const {
